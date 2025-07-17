@@ -1,37 +1,20 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Optional
 import joblib
-import gradio as gr
 
-# Initialize FastAPI app
 app = FastAPI()
-
-# Load the trained model
 model = joblib.load("house_model.pkl")
 
-# Define input schema for FastAPI
 class Input(BaseModel):
-    data: list
+    data: Optional[list] = [8.3252, 41.0, 6.98, 1.02, 322, 2.55, 37.88, -122.23]
 
-# POST endpoint for prediction
 @app.post("/predict")
-def predict(input: Input):
-    prediction = model.predict([input.data])
-    return {"prediction": prediction[0]}
+def predict(input: Input = Input()):
+    pred = model.predict([input.data])
+    return {"prediction": pred[0]}
 
-# Gradio function
-def gradio_predict(val1, val2, val3, val4, val5, val6, val7, val8):
-    return model.predict([[val1, val2, val3, val4, val5, val6, val7, val8]])[0]
-
-# Gradio interface
-demo = gr.Interface(
-    fn=gradio_predict,
-    inputs=["number"] * 8,
-    outputs="number",
-    title="🏠 House Price Predictor",
-    description="Enter 8 housing features to predict median house price."
-)
-
-# Launch the Gradio app if running locally
 if __name__ == "__main__":
-    demo.launch()
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=2000)
+    
